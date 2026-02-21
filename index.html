@@ -1,94 +1,13 @@
 <!DOCTYPE html>
 <html lang="cs">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tetris pro 2 hráče</title>
-    <style>
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .game-container {
-            display: flex;
-            gap: 2rem;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-            backdrop-filter: blur(4px);
-        }
-
-        .player-area {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .player-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            padding: 0.5rem 1rem;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            color: white;
-        }
-
-        .player-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        .score {
-            font-size: 1.5rem;
-            font-weight: bold;
-            background: rgba(255, 255, 255, 0.3);
-            padding: 0.2rem 0.8rem;
-            border-radius: 5px;
-        }
-
-        canvas {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            background: #1a1a2e;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .start-message {
-            color: white;
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-            animation: pulse 1.5s infinite;
-            margin-top: 1rem;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.5;
-            }
-        }
-
-        .game-over {
-            color: #ff6b6b;
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-top: 0.5rem;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="game-container">
         <!-- Hráč 1 -->
@@ -97,9 +16,51 @@
                 <span class="player-title">Hráč 1</span>
                 <span class="score" id="score1">0</span>
             </div>
-            <canvas id="canvas1" width="300" height="600"></canvas>
+            <div class="player-content">
+                <canvas id="canvas1" width="300" height="600"></canvas>
+            </div>
             <div class="start-message" id="startMsg1">Stiskni 1 pro start</div>
             <div class="game-over" id="gameOver1"></div>
+        </div>
+
+        <!-- Central Panel -->
+        <div class="central-panel">
+            <img src="data/LogoInGame.png" alt="Logo" class="game-logo">
+            <h2 class="quota-title">QUOTA</h2>
+
+            <div class="quota-group q1">
+                <div class="quota-label">1 LINES</div>
+                <div class="quota-values">
+                    <span class="quota-value" id="p1-quota1">10</span>
+                    <span class="quota-value" id="p2-quota1">10</span>
+                </div>
+            </div>
+
+            <div class="quota-group q2">
+                <div class="quota-label">2 LINES</div>
+                <div class="quota-values">
+                    <span class="quota-value" id="p1-quota2">05</span>
+                    <span class="quota-value" id="p2-quota2">05</span>
+                </div>
+            </div>
+
+            <div class="quota-group q3">
+                <div class="quota-label">3 LINES</div>
+                <div class="quota-values">
+                    <span class="quota-value" id="p1-quota3">02</span>
+                    <span class="quota-value" id="p2-quota3">02</span>
+                </div>
+            </div>
+
+            <div class="quota-group q4">
+                <div class="quota-label">4 LINES</div>
+                <div class="quota-values">
+                    <span class="quota-value" id="p1-quota4">00</span>
+                    <span class="quota-value" id="p2-quota4">00</span>
+                </div>
+            </div>
+
+            <div class="instruction-p">Reset [P]</div>
         </div>
 
         <!-- Hráč 2 -->
@@ -108,335 +69,15 @@
                 <span class="player-title">Hráč 2</span>
                 <span class="score" id="score2">0</span>
             </div>
-            <canvas id="canvas2" width="300" height="600"></canvas>
+            <div class="player-content">
+                <canvas id="canvas2" width="300" height="600"></canvas>
+            </div>
             <div class="start-message" id="startMsg2">Stiskni 2 pro start</div>
             <div class="game-over" id="gameOver2"></div>
         </div>
     </div>
 
-    <script>
-        class Tetris {
-            constructor(canvasId, scoreId, gameOverId, startMsgId, playerNumber) {
-                this.canvas = document.getElementById(canvasId);
-                this.ctx = this.canvas.getContext('2d');
-                this.scoreElement = document.getElementById(scoreId);
-                this.gameOverElement = document.getElementById(gameOverId);
-                this.startMsgElement = document.getElementById(startMsgId);
-                this.playerNumber = playerNumber;
-                
-                this.rows = 20;
-                this.cols = 10;
-                this.cellSize = 30;
-                
-                this.reset();
-                
-                // Ovládání
-                document.addEventListener('keydown', (e) => this.handleKeyPress(e));
-            }
-            
-            reset() {
-                this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
-                this.score = 0;
-                this.gameActive = false;
-                this.gameOver = false;
-                this.piece = null;
-                this.pieceX = 0;
-                this.pieceY = 0;
-                this.fallInterval = null;
-                this.updateScore();
-                this.gameOverElement.textContent = '';
-                if (!this.gameActive && !this.gameOver) {
-                    this.startMsgElement.style.display = 'block';
-                }
-            }
-            
-            start() {
-                if (this.gameActive || this.gameOver) return;
-                
-                this.gameActive = true;
-                this.gameOver = false;
-                this.startMsgElement.style.display = 'none';
-                this.gameOverElement.textContent = '';
-                
-                // Reset hrací plochy
-                this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
-                this.score = 0;
-                this.updateScore();
-                
-                // Vytvoření první figurky
-                this.spawnPiece();
-                
-                // Spuštění pádu
-                if (this.fallInterval) clearInterval(this.fallInterval);
-                this.fallInterval = setInterval(() => this.moveDown(), 500);
-            }
-            
-            stop() {
-                if (this.fallInterval) {
-                    clearInterval(this.fallInterval);
-                    this.fallInterval = null;
-                }
-                this.gameActive = false;
-            }
-            
-            gameOverHandler() {
-                this.stop();
-                this.gameOver = true;
-                this.gameOverElement.textContent = 'KONEC HRY!';
-            }
-            
-            spawnPiece() {
-                const pieces = [
-                    [[1, 1, 1, 1]], // I
-                    [[1, 1], [1, 1]], // O
-                    [[1, 1, 1], [0, 1, 0]], // T
-                    [[1, 1, 1], [1, 0, 0]], // L
-                    [[1, 1, 1], [0, 0, 1]], // J
-                    [[1, 1, 0], [0, 1, 1]], // S
-                    [[0, 1, 1], [1, 1, 0]] // Z
-                ];
-                
-                this.piece = pieces[Math.floor(Math.random() * pieces.length)];
-                this.pieceX = Math.floor((this.cols - this.piece[0].length) / 2);
-                this.pieceY = 0;
-                
-                // Kontrola, zda se figurka vejde
-                if (this.collision()) {
-                    this.gameOverHandler();
-                }
-            }
-            
-            collision() {
-                for (let y = 0; y < this.piece.length; y++) {
-                    for (let x = 0; x < this.piece[y].length; x++) {
-                        if (this.piece[y][x] !== 0) {
-                            const boardX = this.pieceX + x;
-                            const boardY = this.pieceY + y;
-                            
-                            if (boardX < 0 || boardX >= this.cols || boardY >= this.rows || boardY < 0) {
-                                return true;
-                            }
-                            
-                            if (boardY >= 0 && this.board[boardY][boardX] !== 0) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                return false;
-            }
-            
-            mergePiece() {
-                for (let y = 0; y < this.piece.length; y++) {
-                    for (let x = 0; x < this.piece[y].length; x++) {
-                        if (this.piece[y][x] !== 0) {
-                            const boardY = this.pieceY + y;
-                            const boardX = this.pieceX + x;
-                            
-                            if (boardY >= 0 && boardY < this.rows && boardX >= 0 && boardX < this.cols) {
-                                this.board[boardY][boardX] = this.playerNumber;
-                            }
-                        }
-                    }
-                }
-                
-                this.clearLines();
-                this.spawnPiece();
-            }
-            
-            clearLines() {
-                for (let y = this.rows - 1; y >= 0; y--) {
-                    if (this.board[y].every(cell => cell !== 0)) {
-                        // Odstranění řádku
-                        this.board.splice(y, 1);
-                        this.board.unshift(Array(this.cols).fill(0));
-                        y++; // Znovu zkontrolujeme stejný index
-                        
-                        this.score += 100;
-                        this.updateScore();
-                    }
-                }
-            }
-            
-            moveDown() {
-                if (!this.gameActive || !this.piece) return;
-                
-                this.pieceY++;
-                
-                if (this.collision()) {
-                    this.pieceY--;
-                    this.mergePiece();
-                }
-                
-                this.draw();
-            }
-            
-            moveLeft() {
-                if (!this.gameActive || !this.piece) return;
-                
-                this.pieceX--;
-                
-                if (this.collision()) {
-                    this.pieceX++;
-                }
-                
-                this.draw();
-            }
-            
-            moveRight() {
-                if (!this.gameActive || !this.piece) return;
-                
-                this.pieceX++;
-                
-                if (this.collision()) {
-                    this.pieceX--;
-                }
-                
-                this.draw();
-            }
-            
-            rotate() {
-                if (!this.gameActive || !this.piece) return;
-                
-                const rotated = this.piece[0].map((_, i) => 
-                    this.piece.map(row => row[i]).reverse()
-                );
-                
-                const previousPiece = this.piece;
-                this.piece = rotated;
-                
-                if (this.collision()) {
-                    this.piece = previousPiece;
-                }
-                
-                this.draw();
-            }
-            
-            updateScore() {
-                this.scoreElement.textContent = this.score;
-            }
-            
-            draw() {
-                // Vyčištění canvasu
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                
-                // Vykreslení hrací desky
-                for (let y = 0; y < this.rows; y++) {
-                    for (let x = 0; x < this.cols; x++) {
-                        if (this.board[y][x] !== 0) {
-                            // Hráč 1 = červená, Hráč 2 = modrá
-                            this.ctx.fillStyle = this.board[y][x] === 1 ? '#ff6b6b' : '#4ecdc4';
-                            this.ctx.fillRect(x * this.cellSize, y * this.cellSize, this.cellSize - 1, this.cellSize - 1);
-                            
-                            // Přidání efektu lesklosti
-                            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                            this.ctx.fillRect(x * this.cellSize, y * this.cellSize, this.cellSize - 1, 5);
-                        }
-                    }
-                }
-                
-                // Vykreslení aktuální figurky
-                if (this.piece && this.gameActive) {
-                    for (let y = 0; y < this.piece.length; y++) {
-                        for (let x = 0; x < this.piece[y].length; x++) {
-                            if (this.piece[y][x] !== 0) {
-                                const boardX = (this.pieceX + x) * this.cellSize;
-                                const boardY = (this.pieceY + y) * this.cellSize;
-                                
-                                // Průhlednější verze pro padající figurku
-                                this.ctx.fillStyle = this.playerNumber === 1 ? 'rgba(255, 107, 107, 0.7)' : 'rgba(78, 205, 196, 0.7)';
-                                this.ctx.fillRect(boardX, boardY, this.cellSize - 1, this.cellSize - 1);
-                                
-                                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-                                this.ctx.fillRect(boardX, boardY, this.cellSize - 1, 5);
-                            }
-                        }
-                    }
-                }
-                
-                // Vykreslení mřížky
-                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-                this.ctx.lineWidth = 1;
-                
-                for (let i = 0; i <= this.cols; i++) {
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(i * this.cellSize, 0);
-                    this.ctx.lineTo(i * this.cellSize, this.canvas.height);
-                    this.ctx.stroke();
-                }
-                
-                for (let i = 0; i <= this.rows; i++) {
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(0, i * this.cellSize);
-                    this.ctx.lineTo(this.canvas.width, i * this.cellSize);
-                    this.ctx.stroke();
-                }
-            }
-            
-            handleKeyPress(e) {
-                if (!this.gameActive && !this.gameOver) {
-                    // Spuštění hry podle čísla hráče
-                    if (e.key === this.playerNumber.toString()) {
-                        this.start();
-                    }
-                    return;
-                }
-                
-                if (!this.gameActive) return;
-                
-                // Ovládání pouze pro svého hráče (WSAD pro hráče 1, šipky pro hráče 2)
-                if (this.playerNumber === 1) {
-                    switch(e.key) {
-                        case 'a':
-                        case 'A':
-                            this.moveLeft();
-                            break;
-                        case 'd':
-                        case 'D':
-                            this.moveRight();
-                            break;
-                        case 's':
-                        case 'S':
-                            this.moveDown();
-                            break;
-                        case 'w':
-                        case 'W':
-                            this.rotate();
-                            break;
-                    }
-                } else {
-                    switch(e.key) {
-                        case 'ArrowLeft':
-                            this.moveLeft();
-                            break;
-                        case 'ArrowRight':
-                            this.moveRight();
-                            break;
-                        case 'ArrowDown':
-                            this.moveDown();
-                            break;
-                        case 'ArrowUp':
-                            this.rotate();
-                            break;
-                    }
-                }
-            }
-        }
-
-        // Inicializace her
-        const game1 = new Tetris('canvas1', 'score1', 'gameOver1', 'startMsg1', 1);
-        const game2 = new Tetris('canvas2', 'score2', 'gameOver2', 'startMsg2', 2);
-
-        // První vykreslení
-        game1.draw();
-        game2.draw();
-
-        // Zamezení scrollování stránky při použití šipek
-        window.addEventListener('keydown', (e) => {
-            if (e.key.startsWith('Arrow') || ['w', 'W', 's', 'S', 'a', 'A', 'd', 'D'].includes(e.key)) {
-                e.preventDefault();
-            }
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
+
 </html>
