@@ -29,6 +29,7 @@
         <!-- Central Panel -->
         <div class="central-panel">
             <img src="data/LogoInGame.png" alt="Logo" class="game-logo">
+            <div id="level-display" class="level-indicator">LEVEL 1</div>
             <h2 class="quota-title">QUOTA</h2>
 
             <div class="quota-group q1">
@@ -63,7 +64,12 @@
                 </div>
             </div>
 
-            <div class="instruction-p">Reset [P] | Music [M]: <span id="music-status">ON</span></div>
+            <div id="win-announcement" class="win-message"></div>
+            <div class="controls-block">
+                <div class="instruction-p">[P] Reset level</div>
+                <div class="instruction-p">[B] Random Track </div>
+                <div class="instruction-p">[M] Music: <span id="music-status">ON</span></div>
+            </div>
         </div>
 
         <!-- Player 2 -->

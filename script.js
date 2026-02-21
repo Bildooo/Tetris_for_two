@@ -33,10 +33,27 @@ class Tetris {
 
         // Initialize static music if not already done
         if (!Tetris.mainMusic) {
-            Tetris.mainMusic = new Audio('data/MainTitle.mp3');
-            Tetris.mainMusic.loop = true;
-            Tetris.mainMusic.volume = 0.3;
+            Tetris.playlist = [
+                '01 - Bioscop Fanfare.mp3',
+                '02 - Master of Magic (ZX Spectrum Remix).mp3',
+                '03 - Thereza\'s Web (Featuring Hana Hlozkova).mp3',
+                '04 - Jeden kus materiálu (27.5 Extended Mix).mp3',
+                '05 - Choking Hazard_ Main Theme.mp3',
+                '06 - Choking Hazard_ Dr. Reinis.mp3',
+                '07 - Choking Hazard_ The Kitchen.mp3',
+                '08 - Feud (ZX Spectrum Remix).mp3',
+                '09 - Bytefest Megamix (for Rob Hubbard).mp3',
+                '10 - Csardas Continuum.mp3',
+                '11 - RetroVirus 255 Main Theme.mp3',
+                '12 - Belegost (ZX Spectrum Remix).mp3',
+                '13 - Zub (ZX Spectrum Remix).mp3',
+                '14 - I Was a Teenage Intellectual (Soundtrack Mix).mp3',
+                '15 - Michal David is Reborn.mp3',
+                'MainTitle.mp3'
+            ];
+            Tetris.mainMusic = new Audio();
             Tetris.musicEnabled = true;
+            Tetris.playRandomTrack();
         }
 
         // Volume settings
@@ -51,10 +68,44 @@ class Tetris {
 
         // Controls
         document.addEventListener('keydown', (e) => this.handleKeyPress(e));
+        document.addEventListener('keyup', (e) => this.handleKeyUp(e));
     }
 
     static mainMusic = null;
+    static playlist = [];
     static musicEnabled = true;
+    static currentLevel = 1;
+
+    static getLevelQuota(level) {
+        // Algorithmic quota generator
+        // Each level: +1 to 1L and 2L
+        // Every 3rd level: +1 to 3L
+        // Every 4th level: +1 to 4L
+        return {
+            1: 10 + (level - 1),
+            2: 0 + (level - 1),
+            3: Math.floor(level / 3),
+            4: Math.floor(level / 4)
+        };
+    }
+
+    static playRandomTrack() {
+        if (!Tetris.mainMusic) return;
+        const randomTrack = Tetris.playlist[Math.floor(Math.random() * Tetris.playlist.length)];
+        Tetris.mainMusic.src = `data/music/${randomTrack}`;
+        Tetris.mainMusic.volume = 0.3;
+
+        // Ensure manual play is respected by browser
+        if (Tetris.musicEnabled) {
+            Tetris.mainMusic.play().catch(e => console.log("Music play blocked:", e));
+        }
+
+        // When track ends, play another random one
+        Tetris.mainMusic.onended = () => {
+            Tetris.playRandomTrack();
+        };
+    }
+
     static pieceSequence = [];
 
     static getNextPiece(index) {
@@ -76,7 +127,7 @@ class Tetris {
     reset() {
         this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
         this.score = 0;
-        this.quota = { 1: 10, 2: 0, 3: 0, 4: 0 };
+        this.quota = Tetris.getLevelQuota(Tetris.currentLevel);
         this.gameActive = false;
         this.gameOver = false;
         this.piece = null;
@@ -258,8 +309,42 @@ class Tetris {
                 if (!decremented) break;
             }
             this.updateQuotaDisplay();
+            this.checkWin();
         }
         return linesCleared;
+    }
+
+    checkWin() {
+        if (Object.values(this.quota).every(q => q === 0)) {
+            Tetris.announceWin(this.playerNumber);
+        }
+    }
+
+    static announceWin(playerNum) {
+        const winElem = document.getElementById('win-announcement');
+        if (winElem) {
+            winElem.textContent = `PLAYER ${playerNum} WON LEVEL ${Tetris.currentLevel}!`;
+        }
+
+        // Stop both games and reset for next level
+        if (window.game1) window.game1.stop();
+        if (window.game2) window.game2.stop();
+
+        setTimeout(() => {
+            if (winElem) winElem.textContent = '';
+            Tetris.currentLevel++;
+            Tetris.updateLevelDisplay();
+            Tetris.playRandomTrack(); // New level, new song
+            if (window.game1) window.game1.reset();
+            if (window.game2) window.game2.reset();
+        }, 3000);
+    }
+
+    static updateLevelDisplay() {
+        const levelElem = document.getElementById('level-display');
+        if (levelElem) {
+            levelElem.textContent = `LEVEL ${Tetris.currentLevel}`;
+        }
     }
 
     moveDown() {
@@ -482,11 +567,31 @@ class Tetris {
             }
         }
     }
+
+    handleKeyUp(e) {
+        if (!this.gameActive) return;
+
+        // Reset speed to normal (500ms) when releasing fast fall key
+        if (this.playerNumber === 1) {
+            if (e.key === 's' || e.key === 'S') {
+                if (this.currentSpeed === 50) {
+                    this.updateSpeed(500);
+                }
+            }
+        } else {
+            if (e.key === 'ArrowDown') {
+                if (this.currentSpeed === 50) {
+                    this.updateSpeed(500);
+                }
+            }
+        }
+    }
 }
 
-// Inicializace her
-const game1 = new Tetris('canvas1', 'score1', 'gameOver1', 'startMsg1', 1);
-const game2 = new Tetris('canvas2', 'score2', 'gameOver2', 'startMsg2', 2);
+// Game initialization
+window.game1 = new Tetris('canvas1', 'score1', 'gameOver1', 'startMsg1', 1);
+window.game2 = new Tetris('canvas2', 'score2', 'gameOver2', 'startMsg2', 2);
+const { game1, game2 } = window;
 
 // První vykreslení
 game1.draw();
@@ -500,6 +605,8 @@ window.addEventListener('keydown', (e) => {
 
     if (e.key === 'p' || e.key === 'P') {
         Tetris.pieceSequence = [];
+        Tetris.currentLevel = 1;
+        Tetris.updateLevelDisplay();
         game1.stop();
         game1.reset();
         game2.stop();
@@ -516,5 +623,9 @@ window.addEventListener('keydown', (e) => {
             Tetris.mainMusic.pause();
             if (statusElement) statusElement.textContent = 'OFF';
         }
+    }
+
+    if (e.key === 'b' || e.key === 'B') {
+        Tetris.playRandomTrack();
     }
 });
