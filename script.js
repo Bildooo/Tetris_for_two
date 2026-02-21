@@ -11,7 +11,7 @@ class Tetris {
         this.cols = 10;
         this.cellSize = 30;
 
-        // Definice barev pro tetromina
+        // Tetromino colors
         this.colors = [
             null,
             '#00f0f0', // I (Cyan)
@@ -23,7 +23,7 @@ class Tetris {
             '#f00000'  // Z (Red)
         ];
 
-        // Zvuky
+        // Sounds
         this.sounds = {
             dotek: new Audio('data/dotek.wav'),
             droped: new Audio('data/droped.wav'),
@@ -31,19 +31,30 @@ class Tetris {
             destroyLine: new Audio('data/destroyLine.wav')
         };
 
-        // Nastavení hlasitosti
-        this.sounds.dotek.volume = 0.5;
-        this.sounds.rotate.volume = 0.5;
+        // Initialize static music if not already done
+        if (!Tetris.mainMusic) {
+            Tetris.mainMusic = new Audio('data/MainTitle.mp3');
+            Tetris.mainMusic.loop = true;
+            Tetris.mainMusic.volume = 0.3;
+            Tetris.musicEnabled = true;
+        }
 
-        // Nastavení opakováni pro droped zvuk
+        // Volume settings
+        this.sounds.dotek.volume = 0.12;
+        this.sounds.rotate.volume = 0.12;
+        this.sounds.droped.volume = 0.12;
+
+        // Loop for dropping sound
         this.sounds.droped.loop = true;
 
         this.reset();
 
-        // Ovládání
+        // Controls
         document.addEventListener('keydown', (e) => this.handleKeyPress(e));
     }
 
+    static mainMusic = null;
+    static musicEnabled = true;
     static pieceSequence = [];
 
     static getNextPiece(index) {
@@ -65,7 +76,7 @@ class Tetris {
     reset() {
         this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
         this.score = 0;
-        this.quota = { 1: 10, 2: 10, 3: 5, 4: 3 };
+        this.quota = { 1: 10, 2: 0, 3: 0, 4: 0 };
         this.gameActive = false;
         this.gameOver = false;
         this.piece = null;
@@ -95,8 +106,13 @@ class Tetris {
         this.score = 0;
         this.updateScore();
 
-        // Vytvoření první figurky
+        // Create first piece
         this.spawnPiece();
+
+        // Start background music on first start
+        if (Tetris.musicEnabled && Tetris.mainMusic.paused) {
+            Tetris.mainMusic.play().catch(e => console.log("Music play blocked:", e));
+        }
 
         // Spuštění pádu
         this.updateSpeed(500);
@@ -136,7 +152,7 @@ class Tetris {
     gameOverHandler() {
         this.stop();
         this.gameOver = true;
-        this.gameOverElement.textContent = 'KONEC HRY!';
+        this.gameOverElement.textContent = 'GAME OVER!';
     }
 
     spawnPiece() {
@@ -156,12 +172,12 @@ class Tetris {
         this.pieceX = Math.floor((this.cols - this.piece[0].length) / 2);
         this.pieceY = 0;
 
-        // Kontrola, zda se figurka vejde
+        // Check if piece fits
         if (this.collision()) {
             this.gameOverHandler();
         }
 
-        // Reset rychlosti pro novou figurku
+        // Reset speed for new piece
         if (this.currentSpeed !== 500) {
             this.updateSpeed(500);
         }
@@ -211,10 +227,10 @@ class Tetris {
         let linesCleared = 0;
         for (let y = this.rows - 1; y >= 0; y--) {
             if (this.board[y].every(cell => cell !== 0)) {
-                // Odstranění řádku
+                // Remove line
                 this.board.splice(y, 1);
                 this.board.unshift(Array(this.cols).fill(0));
-                y++; // Znovu zkontrolujeme stejný index
+                y++; // Re-check same index
 
                 linesCleared++;
                 this.score += 100 * linesCleared;
@@ -226,11 +242,22 @@ class Tetris {
             this.playSound('destroyLine');
         }
 
-        if (linesCleared > 0 && linesCleared <= 4) {
-            if (this.quota[linesCleared] > 0) {
-                this.quota[linesCleared]--;
-                this.updateQuotaDisplay();
+        if (linesCleared > 0) {
+            let remainingLines = linesCleared;
+            while (remainingLines > 0) {
+                let decremented = false;
+                // Try from highest possible quota down to 1
+                for (let i = Math.min(remainingLines, 4); i >= 1; i--) {
+                    if (this.quota[i] > 0) {
+                        this.quota[i]--;
+                        remainingLines -= i;
+                        decremented = true;
+                        break;
+                    }
+                }
+                if (!decremented) break;
             }
+            this.updateQuotaDisplay();
         }
         return linesCleared;
     }
@@ -330,16 +357,7 @@ class Tetris {
         for (let y = 0; y < this.rows; y++) {
             for (let x = 0; x < this.cols; x++) {
                 if (this.board[y][x] !== 0) {
-                    let color = this.colors[this.board[y][x]];
-                    if (this.playerNumber === 2) {
-                        color = this.darkenColor(color, 30);
-                    }
-                    this.ctx.fillStyle = color;
-                    this.ctx.fillRect(x * this.cellSize, y * this.cellSize, this.cellSize - 1, this.cellSize - 1);
-
-                    // Přidání efektu lesklosti
-                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                    this.ctx.fillRect(x * this.cellSize, y * this.cellSize, this.cellSize - 1, 5);
+                    this.drawBlock(x, y, this.board[y][x]);
                 }
             }
         }
@@ -349,40 +367,58 @@ class Tetris {
             for (let y = 0; y < this.piece.length; y++) {
                 for (let x = 0; x < this.piece[y].length; x++) {
                     if (this.piece[y][x] !== 0) {
-                        const boardX = (this.pieceX + x) * this.cellSize;
-                        const boardY = (this.pieceY + y) * this.cellSize;
-
-                        let color = this.colors[this.pieceType];
-                        if (this.playerNumber === 2) {
-                            color = this.darkenColor(color, 30);
-                        }
-                        this.ctx.fillStyle = color;
-                        this.ctx.fillRect(boardX, boardY, this.cellSize - 1, this.cellSize - 1);
-
-                        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-                        this.ctx.fillRect(boardX, boardY, this.cellSize - 1, 5);
+                        this.drawBlock(this.pieceX + x, this.pieceY + y, this.pieceType);
                     }
                 }
             }
         }
 
-        // Vykreslení mřížky
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        // Vykreslení mřížky (jemnější)
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
         this.ctx.lineWidth = 1;
-
         for (let i = 0; i <= this.cols; i++) {
             this.ctx.beginPath();
             this.ctx.moveTo(i * this.cellSize, 0);
             this.ctx.lineTo(i * this.cellSize, this.canvas.height);
             this.ctx.stroke();
         }
-
         for (let i = 0; i <= this.rows; i++) {
             this.ctx.beginPath();
             this.ctx.moveTo(0, i * this.cellSize);
             this.ctx.lineTo(this.canvas.width, i * this.cellSize);
             this.ctx.stroke();
         }
+    }
+
+    drawBlock(x, y, type) {
+        let color = this.colors[type];
+        if (this.playerNumber === 2) {
+            color = this.darkenColor(color, 25);
+        }
+
+        const bx = x * this.cellSize;
+        const by = y * this.cellSize;
+        const size = this.cellSize - 2;
+
+        // Hlavní čtverec
+        this.ctx.fillStyle = color;
+        this.ctx.beginPath();
+        this.ctx.roundRect(bx + 1, by + 1, size, size, 4);
+        this.ctx.fill();
+
+        // Lesk (horní část)
+        const gradient = this.ctx.createLinearGradient(bx, by, bx, by + size);
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+        gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
+        this.ctx.fillStyle = gradient;
+        this.ctx.beginPath();
+        this.ctx.roundRect(bx + 1, by + 1, size, size / 2, 4);
+        this.ctx.fill();
+
+        // Okraj
+        this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+        this.ctx.lineWidth = 1;
+        this.ctx.stroke();
     }
 
     darkenColor(hex, percent) {
@@ -396,7 +432,7 @@ class Tetris {
 
     handleKeyPress(e) {
         if (!this.gameActive && !this.gameOver) {
-            // Spuštění hry podle čísla hráče
+            // Start game based on player number
             if (e.key === this.playerNumber.toString()) {
                 this.start();
             }
@@ -405,7 +441,7 @@ class Tetris {
 
         if (!this.gameActive) return;
 
-        // Ovládání pouze pro svého hráče (WSAD pro hráče 1, šipky pro hráče 2)
+        // Player controls (WSAD for Player 1, Arrows for Player 2)
         if (this.playerNumber === 1) {
             switch (e.key) {
                 case 'a':
@@ -468,5 +504,17 @@ window.addEventListener('keydown', (e) => {
         game1.reset();
         game2.stop();
         game2.reset();
+    }
+
+    if (e.key === 'm' || e.key === 'M') {
+        Tetris.musicEnabled = !Tetris.musicEnabled;
+        const statusElement = document.getElementById('music-status');
+        if (Tetris.musicEnabled) {
+            Tetris.mainMusic.play().catch(e => console.log("Music play blocked:", e));
+            if (statusElement) statusElement.textContent = 'ON';
+        } else {
+            Tetris.mainMusic.pause();
+            if (statusElement) statusElement.textContent = 'OFF';
+        }
     }
 });
