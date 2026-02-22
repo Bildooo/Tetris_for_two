@@ -274,11 +274,11 @@ canvas {
 
 }
 
-.game-footer {
+.game-footer_1 {
     margin-top: 0;
 
     position: absolute;
-    bottom: 1.5rem;
+    bottom: 3.2rem;
     left: 1.5rem;
     right: 1.5rem;
     background: rgba(255, 255, 255, 0.05);
@@ -286,14 +286,41 @@ canvas {
     padding: 4px 0px;
     text-align: center;
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.825);
+    color: rgba(160, 160, 160, 0.825);
     letter-spacing: 1px;
     text-transform: uppercase;
     font-weight: 300;
     border-radius: 10px;
 }
 
-.start-message {
+.game-footer_2 {
+    margin-top: 0;
+
+    position: absolute;
+    bottom: 1.2rem;
+    left: 1.5rem;
+    right: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-top: 1px solid var(--glass-border);
+    padding: 4px 0px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: rgba(160, 160, 160, 0.825);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 300;
+    border-radius: 10px;
+}
+
+/* .name-highlight {
+    font-weight: 900;
+    font-size: 100%;
+    /* o něco větší */
+color: #ffffff;
+/* světlejší odstín */
+}
+
+*/ .start-message {
     color: #fff;
     font-size: 1rem;
     font-weight: 600;
