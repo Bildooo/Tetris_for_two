@@ -34,21 +34,37 @@ class Tetris {
         // Initialize static music if not already done
         if (!Tetris.mainMusic) {
             Tetris.playlist = [
-                '01 - Bioscop Fanfare.mp3',
-                '02 - Master of Magic (ZX Spectrum Remix).mp3',
-                '03 - Thereza\'s Web (Featuring Hana Hlozkova).mp3',
-                '05 - Choking Hazard_ Main Theme.mp3',
-                '06 - Choking Hazard_ Dr. Reinis.mp3',
-                '07 - Choking Hazard_ The Kitchen.mp3',
-                '08 - Feud (ZX Spectrum Remix).mp3',
-                '09 - Bytefest Megamix (for Rob Hubbard).mp3',
-                '10 - Csardas Continuum.mp3',
-                '11 - RetroVirus 255 Main Theme.mp3',
-                '12 - Belegost (ZX Spectrum Remix).mp3',
-                '13 - Zub (ZX Spectrum Remix).mp3',
-                '14 - I Was a Teenage Intellectual (Soundtrack Mix).mp3',
-                '15 - Michal David is Reborn.mp3',
-                'MainTitle.mp3'
+                'Alla Turca.mp3',
+                'Atomix.mp3',
+                'Axel F.mp3',
+                'Belegost.mp3',
+                'Belegost_Remix.mp3',
+                'Choking Hazard_ Dr. Reinis.mp3',
+                'Commando.mp3',
+                'Crazy Comets_Penetrator.mp3',
+                'Csardas Continuum.mp3',
+                'Equinoxe_V.mp3',
+                'F.I.R.E..mp3',
+                'Feud.mp3',
+                'Feud_Remix.mp3',
+                'Fugue.mp3',
+                'Ghostbusters.mp3',
+                'Indiana Jones 3.mp3',
+                'Jet Story.mp3',
+                'Land Of Confusion.mp3',
+                'Magnetic Fields II.mp3',
+                'Magnetic Fields IV.mp3',
+                'Master of Magic.mp3',
+                'Master of Magic_Ori.mp3',
+                'Piskworks.mp3',
+                'Rendez-Vous IV.mp3',
+                'RetroVirus255_Main.mp3',
+                'Terra Cresta.mp3',
+                'Tetris 2.mp3',
+                'Tetris 2_Main.mp3',
+                'The Last V8.mp3',
+                'View to a Kill.mp3',
+                'Where Time Dropped Dead.mp3'
             ];
             Tetris.mainMusic = new Audio();
             Tetris.musicEnabled = true;
@@ -73,6 +89,7 @@ class Tetris {
 
     static mainMusic = null;
     static playlist = [];
+    static currentTrackIndex = -1;
     static musicEnabled = true;
     static currentLevel = 1;
 
@@ -82,28 +99,63 @@ class Tetris {
         // Every 3rd level: +1 to 3L
         // Every 4th level: +1 to 4L
         return {
-            1: 10 + (level - 1),
+            1: 6 + (level - 1),
             2: 0 + (level - 1),
             3: Math.floor(level / 3),
-            4: Math.floor(level / 4)
+            4: Math.floor(level / 5)
         };
     }
 
     static playRandomTrack() {
-        if (!Tetris.mainMusic) return;
-        const randomTrack = Tetris.playlist[Math.floor(Math.random() * Tetris.playlist.length)];
-        Tetris.mainMusic.src = `data/Music/${randomTrack}`;
+        if (!Tetris.playlist.length) return;
+        const randomIndex = Math.floor(Math.random() * Tetris.playlist.length);
+        Tetris.playTrack(randomIndex);
+    }
+
+    static playNextTrack() {
+        if (!Tetris.playlist.length) return;
+        Tetris.currentTrackIndex = (Tetris.currentTrackIndex + 1) % Tetris.playlist.length;
+        Tetris.playTrack(Tetris.currentTrackIndex);
+    }
+
+    static playTrack(index) {
+        if (!Tetris.mainMusic || index < 0 || index >= Tetris.playlist.length) return;
+
+        Tetris.currentTrackIndex = index;
+        const trackFile = Tetris.playlist[index];
+        Tetris.mainMusic.src = `data/Music/${trackFile}`;
         Tetris.mainMusic.volume = 0.3;
 
         // Ensure manual play is respected by browser
         if (Tetris.musicEnabled) {
-            Tetris.mainMusic.play().catch(e => console.log("Music play blocked:", e));
+            Tetris.mainMusic.play().then(() => {
+                Tetris.updateMusicUI();
+            }).catch(e => console.log("Music play blocked:", e));
+        } else {
+            Tetris.updateMusicUI();
         }
 
-        // When track ends, play another random one
+        // When track ends, play another random one or next? User didn't specify, keeping random for auto-loop
         Tetris.mainMusic.onended = () => {
             Tetris.playRandomTrack();
         };
+    }
+
+    static updateMusicUI() {
+        const statusElement = document.getElementById('music-status');
+        if (!statusElement) return;
+
+        if (!Tetris.musicEnabled) {
+            statusElement.textContent = 'OFF';
+            return;
+        }
+
+        if (Tetris.currentTrackIndex >= 0) {
+            const trackName = Tetris.playlist[Tetris.currentTrackIndex].replace('.mp3', '').replaceAll('_', ' ');
+            statusElement.textContent = trackName;
+        } else {
+            statusElement.textContent = 'ON';
+        }
     }
 
     static pieceSequence = [];
@@ -145,6 +197,15 @@ class Tetris {
     }
 
     start() {
+        // Reset to Level 1 if neither player is currently playing
+        const game1Active = window.game1 && window.game1.gameActive;
+        const game2Active = window.game2 && window.game2.gameActive;
+        if (!game1Active && !game2Active) {
+            Tetris.currentLevel = 1;
+            Tetris.updateLevelDisplay();
+            Tetris.pieceSequence = [];
+        }
+
         // Allow restart after game over (player presses their number again)
         if (this.gameOver) {
             this.gameOver = false;
@@ -344,6 +405,10 @@ class Tetris {
     }
 
     static announceWin(playerNum) {
+        // Remember who was actively playing BEFORE stopping
+        const wasActive1 = window.game1 && window.game1.gameActive;
+        const wasActive2 = window.game2 && window.game2.gameActive;
+
         // Stop both games immediately
         if (window.game1) window.game1.stop();
         if (window.game2) window.game2.stop();
@@ -351,7 +416,6 @@ class Tetris {
         // Immediately wipe both canvases and display win message
         Tetris.currentLevel++;
         Tetris.updateLevelDisplay();
-        Tetris.playRandomTrack();
 
         let wipeDone = 0;
         const afterWipe = (game) => {
@@ -376,8 +440,12 @@ class Tetris {
             wipeDone++;
             if (wipeDone === 2) {
                 setTimeout(() => {
-                    if (window.game1) window.game1.startDirect();
-                    if (window.game2) window.game2.startDirect();
+                    // Start new track only when the new level actually starts
+                    Tetris.playRandomTrack();
+
+                    // Start only players who were active in the finished level
+                    if (window.game1 && wasActive1) window.game1.startDirect();
+                    if (window.game2 && wasActive2) window.game2.startDirect();
                 }, 2500);
             }
         };
@@ -729,17 +797,23 @@ window.addEventListener('keydown', (e) => {
 
     if (e.key === 'm' || e.key === 'M') {
         Tetris.musicEnabled = !Tetris.musicEnabled;
-        const statusElement = document.getElementById('music-status');
         if (Tetris.musicEnabled) {
-            Tetris.mainMusic.play().catch(e => console.log("Music play blocked:", e));
-            if (statusElement) statusElement.textContent = 'ON';
+            if (Tetris.mainMusic.src) {
+                Tetris.mainMusic.play().catch(e => console.log("Music play blocked:", e));
+            } else {
+                Tetris.playRandomTrack();
+            }
         } else {
             Tetris.mainMusic.pause();
-            if (statusElement) statusElement.textContent = 'OFF';
         }
+        Tetris.updateMusicUI();
     }
 
     if (e.key === 'b' || e.key === 'B') {
         Tetris.playRandomTrack();
+    }
+
+    if (e.key === 'n' || e.key === 'N') {
+        Tetris.playNextTrack();
     }
 });

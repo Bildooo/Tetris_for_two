@@ -40,18 +40,20 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.5rem;
-    padding: 1rem;
+    gap: 0.5rem;
+    padding: 0.5rem;
     background: rgba(0, 0, 0, 0.4);
     border-radius: 20px;
     border: 1px solid var(--glass-border);
+    min-height: auto;
+    position: relative;
 }
 
 .player-header {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.2rem;
+    gap: 0rem;
     width: 100%;
 }
 
@@ -72,7 +74,7 @@ body {
 }
 
 .score {
-    font-size: 2.5rem;
+    font-size: 1.5rem;
     font-weight: 700;
     text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
 }
@@ -81,6 +83,7 @@ canvas {
     background: #000;
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    display: block;
 }
 
 #canvas1 {
@@ -99,10 +102,10 @@ canvas {
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    gap: 1.2rem;
+    gap: 0.6rem;
     min-width: 280px;
     background: rgba(0, 0, 0, 0.5);
-    padding: 1.5rem 0.5rem;
+    padding: 1rem 0.5rem;
     border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -115,25 +118,52 @@ canvas {
     margin-bottom: 0.2rem;
 }
 
+.level-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 0px;
+}
+
+.level-indicator-box {
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1rem;
+    padding: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #001121;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .level-indicator {
     font-family: var(--retro-font);
-    font-size: 1.1rem;
-    color: #fff;
+    font-size: 1.35rem;
+    color: #ef4444;
+    font-weight: 800;
     letter-spacing: 5px;
-    margin-bottom: 0.2rem;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+    margin: 0;
+    text-transform: uppercase;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.3rem;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.4);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .central-panel_quotas {
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 1rem;
-    padding: 1rem;
-    min-width: 240px;
-    max-width: 280px;
-    margin-top: 0rem;
+    padding: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
     background-color: #001121;
     margin-bottom: 0px;
-
 }
 
 .quota-title {
@@ -145,18 +175,21 @@ canvas {
     text-transform: uppercase;
     text-align: center;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 0.3rem 1.5rem;
+    padding: 0.3rem;
     border-radius: 8px;
     background: rgba(0, 0, 0, 0.4);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .quota-group {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.3rem;
-    width: 94%;
-    padding: 0.4rem;
+    gap: 0.1rem;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.2rem;
     border-radius: 12px;
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -165,9 +198,9 @@ canvas {
 
 .quota-label {
     font-family: var(--retro-font);
-    font-size: 1.35rem;
+    font-size: 1.1rem;
     font-weight: 700;
-    width: 260px;
+    width: 100%;
 }
 
 .quota-values {
@@ -178,7 +211,7 @@ canvas {
 }
 
 .quota-value {
-    font-size: 1.35rem;
+    font-size: 1.1rem;
     font-weight: 700;
     min-width: 2ch;
     text-align: center;
@@ -230,7 +263,7 @@ canvas {
 }
 
 .instructions {
-    margin-top: 0px;
+    margin-top: 0.5rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     background-color: #001121;
@@ -238,8 +271,9 @@ canvas {
     flex-direction: column;
     align-items: center;
     gap: 0.2rem;
-    margin-top: 0px;
     width: 100%;
+    box-sizing: border-box;
+    padding: 10px 0;
 }
 
 .controls-block {
@@ -312,20 +346,18 @@ canvas {
     border-radius: 10px;
 }
 
-/* .name-highlight {
+.name-highlight {
     font-weight: 900;
     font-size: 100%;
-    /* o něco větší */
-color: #ffffff;
-/* světlejší odstín */
+    color: #ffffff;
 }
 
-*/ .start-message {
+.start-message {
     color: #fff;
     font-size: 1rem;
     font-weight: 600;
     letter-spacing: 1px;
-    animation: pulse 2s infinite;
+    animation: pulse 1.5s infinite;
     margin-top: 0.2rem;
     opacity: 0.8;
 }
@@ -334,8 +366,8 @@ color: #ffffff;
 
     0%,
     100% {
-        opacity: 0.3;
-        transform: scale(0.98);
+        opacity: 0.2;
+        transform: scale(0.95);
     }
 
     50% {
@@ -346,9 +378,16 @@ color: #ffffff;
 
 .game-over {
     color: #ef4444;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 800;
     text-transform: uppercase;
-    margin-top: 0.2rem;
+    margin-top: 0;
+    line-height: 1;
     text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+    animation: pulse 1s infinite ease-in-out;
+    text-align: center;
+}
+
+.game-over:empty {
+    display: none;
 }
