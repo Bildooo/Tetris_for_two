@@ -99,7 +99,7 @@ canvas {
     align-items: center;
     justify-content: flex-start;
     gap: 1.2rem;
-    min-width: 240px;
+    min-width: 280px;
     background: rgba(0, 0, 0, 0.5);
     padding: 1.5rem 0.5rem;
     border-radius: 20px;
@@ -107,7 +107,7 @@ canvas {
 }
 
 .game-logo {
-    max-width: 200px;
+    max-width: 240px;
     height: auto;
     border-radius: 15px;
     filter: drop-shadow(0 0 15px rgba(0, 240, 240, 0.5));
@@ -250,12 +250,12 @@ canvas {
     bottom: 1.5rem;
     left: 1.5rem;
     right: 1.5rem;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.1);
     border-top: 1px solid var(--glass-border);
-    padding: 5px 0;
+    padding: 5px 0px;
     text-align: center;
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.825);
     letter-spacing: 1px;
     text-transform: uppercase;
     font-weight: 300;

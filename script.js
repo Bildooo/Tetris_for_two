@@ -37,7 +37,6 @@ class Tetris {
                 '01 - Bioscop Fanfare.mp3',
                 '02 - Master of Magic (ZX Spectrum Remix).mp3',
                 '03 - Thereza\'s Web (Featuring Hana Hlozkova).mp3',
-                '04 - Jeden kus materiálu (27.5 Extended Mix).mp3',
                 '05 - Choking Hazard_ Main Theme.mp3',
                 '06 - Choking Hazard_ Dr. Reinis.mp3',
                 '07 - Choking Hazard_ The Kitchen.mp3',
@@ -60,6 +59,7 @@ class Tetris {
         this.sounds.dotek.volume = 0.12;
         this.sounds.rotate.volume = 0.12;
         this.sounds.droped.volume = 0.12;
+        this.sounds.destroyLine.volume = 0.06;
 
         // Loop for dropping sound
         this.sounds.droped.loop = true;
@@ -145,28 +145,42 @@ class Tetris {
     }
 
     start() {
-        if (this.gameActive || this.gameOver) return;
+        // Allow restart after game over (player presses their number again)
+        if (this.gameOver) {
+            this.gameOver = false;
+            // Stop blinking and clear the game over text immediately
+            if (this.blinkInterval) {
+                clearInterval(this.blinkInterval);
+                this.blinkInterval = null;
+            }
+            this.gameOverElement.textContent = '';
+        }
+        if (this.gameActive) return;
 
-        this.gameActive = true;
-        this.gameOver = false;
         this.startMsgElement.style.display = 'none';
         this.gameOverElement.textContent = '';
 
-        // Reset hrací plochy
-        this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
-        this.score = 0;
-        this.updateScore();
+        // Wipe screen first, then start the game
+        this.screenWipe(() => {
+            this.gameActive = true;
+            this.gameOver = false;
 
-        // Create first piece
-        this.spawnPiece();
+            // Reset board
+            this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
+            this.score = 0;
+            this.updateScore();
 
-        // Start background music on first start
-        if (Tetris.musicEnabled && Tetris.mainMusic.paused) {
-            Tetris.mainMusic.play().catch(e => console.log("Music play blocked:", e));
-        }
+            // Create first piece
+            this.spawnPiece();
 
-        // Spuštění pádu
-        this.updateSpeed(500);
+            // Start background music on first start
+            if (Tetris.musicEnabled && Tetris.mainMusic.paused) {
+                Tetris.mainMusic.play().catch(e => console.log("Music play blocked:", e));
+            }
+
+            // Start falling
+            this.updateSpeed(500);
+        });
     }
 
     updateSpeed(ms) {
@@ -197,13 +211,27 @@ class Tetris {
             clearInterval(this.fallInterval);
             this.fallInterval = null;
         }
+        if (this.blinkInterval) {
+            clearInterval(this.blinkInterval);
+            this.blinkInterval = null;
+        }
         this.gameActive = false;
     }
 
     gameOverHandler() {
         this.stop();
         this.gameOver = true;
+
+        // Blink between GAME OVER and restart hint
+        const startKey = this.playerNumber === 1 ? 'Press 1' : 'Press 2';
+        let blinkState = true;
         this.gameOverElement.textContent = 'GAME OVER!';
+        this.blinkInterval = setInterval(() => {
+            blinkState = !blinkState;
+            this.gameOverElement.textContent = blinkState
+                ? 'GAME OVER!'
+                : `${startKey} TO START`;
+        }, 1000);
     }
 
     spawnPiece() {
@@ -278,11 +306,9 @@ class Tetris {
         let linesCleared = 0;
         for (let y = this.rows - 1; y >= 0; y--) {
             if (this.board[y].every(cell => cell !== 0)) {
-                // Remove line
                 this.board.splice(y, 1);
                 this.board.unshift(Array(this.cols).fill(0));
-                y++; // Re-check same index
-
+                y++;
                 linesCleared++;
                 this.score += 100 * linesCleared;
                 this.updateScore();
@@ -291,13 +317,10 @@ class Tetris {
 
         if (linesCleared > 0) {
             this.playSound('destroyLine');
-        }
 
-        if (linesCleared > 0) {
             let remainingLines = linesCleared;
             while (remainingLines > 0) {
                 let decremented = false;
-                // Try from highest possible quota down to 1
                 for (let i = Math.min(remainingLines, 4); i >= 1; i--) {
                     if (this.quota[i] > 0) {
                         this.quota[i]--;
@@ -321,23 +344,46 @@ class Tetris {
     }
 
     static announceWin(playerNum) {
-        const winElem = document.getElementById('win-announcement');
-        if (winElem) {
-            winElem.textContent = `PLAYER ${playerNum} WON LEVEL ${Tetris.currentLevel}!`;
-        }
-
-        // Stop both games and reset for next level
+        // Stop both games immediately
         if (window.game1) window.game1.stop();
         if (window.game2) window.game2.stop();
 
-        setTimeout(() => {
-            if (winElem) winElem.textContent = '';
-            Tetris.currentLevel++;
-            Tetris.updateLevelDisplay();
-            Tetris.playRandomTrack(); // New level, new song
-            if (window.game1) window.game1.reset();
-            if (window.game2) window.game2.reset();
-        }, 3000);
+        // Immediately wipe both canvases and display win message
+        Tetris.currentLevel++;
+        Tetris.updateLevelDisplay();
+        Tetris.playRandomTrack();
+
+        let wipeDone = 0;
+        const afterWipe = (game) => {
+            const ctx = game.ctx;
+            const w = game.canvas.width;
+            const h = game.canvas.height;
+
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 22px Courier New';
+            ctx.fillText(`PLAYER ${playerNum}`, w / 2, h / 2 - 30);
+            ctx.fillStyle = '#00f0f0';
+            ctx.font = 'bold 18px Courier New';
+            ctx.fillText(`WON LEVEL ${Tetris.currentLevel - 1}!`, w / 2, h / 2 + 5);
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.font = '14px Courier New';
+            ctx.fillText('Next level starting...', w / 2, h / 2 + 40);
+
+            wipeDone++;
+            if (wipeDone === 2) {
+                setTimeout(() => {
+                    if (window.game1) window.game1.startDirect();
+                    if (window.game2) window.game2.startDirect();
+                }, 2500);
+            }
+        };
+
+        if (window.game1) window.game1.screenWipe(() => afterWipe(window.game1));
+        if (window.game2) window.game2.screenWipe(() => afterWipe(window.game2));
     }
 
     static updateLevelDisplay() {
@@ -345,6 +391,22 @@ class Tetris {
         if (levelElem) {
             levelElem.textContent = `LEVEL ${Tetris.currentLevel}`;
         }
+    }
+
+    // Start without screen wipe – used after automatic level transition
+    startDirect() {
+        this.gameOver = false;
+        this.gameActive = true;
+        this.startMsgElement.style.display = 'none';
+        this.gameOverElement.textContent = '';
+
+        this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
+        this.score = 0;
+        this.quota = Tetris.getLevelQuota(Tetris.currentLevel);
+        this.updateScore();
+        this.updateQuotaDisplay();
+        this.spawnPiece();
+        this.updateSpeed(500);
     }
 
     moveDown() {
@@ -434,6 +496,47 @@ class Tetris {
         this.scoreElement.textContent = this.score;
     }
 
+
+    screenWipe(onComplete) {
+        const totalRows = this.rows;
+        const cellSize = this.cellSize;
+        const ctx = this.ctx;
+        const canvasWidth = this.canvas.width;
+        const canvasHeight = this.canvas.height;
+
+        // Sweeper position = row index of the WHITE (leading) band
+        // Starts below the canvas and moves upward (decrements each step)
+        let sweeper = totalRows - 1; // start at bottom row
+        const msPerStep = 70; // 2x slower for dramatic effect
+
+        const interval = setInterval(() => {
+            // Draw 3 bands at sweeper, sweeper+1, sweeper+2
+            // White is at sweeper (leading/top), gray at +1, black at +2 (trailing)
+            const bands = [
+                { row: sweeper, color: '#ffffff' },  // white – leads upward
+                { row: sweeper + 1, color: '#555555' },  // gray  – middle
+                { row: sweeper + 2, color: '#000000' },  // black – trailing
+            ];
+
+            for (const band of bands) {
+                if (band.row >= 0 && band.row < totalRows) {
+                    ctx.fillStyle = band.color;
+                    ctx.fillRect(0, band.row * cellSize, canvasWidth, cellSize);
+                }
+            }
+
+            sweeper--;
+
+            // Done when black band (sweeper+2) has also left the top (sweeper+2 < 0 → sweeper < -2)
+            if (sweeper < -2) {
+                clearInterval(interval);
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                if (onComplete) onComplete();
+            }
+        }, msPerStep);
+    }
+
     draw() {
         // Vyčištění canvasu
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -516,15 +619,16 @@ class Tetris {
     }
 
     handleKeyPress(e) {
-        if (!this.gameActive && !this.gameOver) {
-            // Start game based on player number
-            if (e.key === this.playerNumber.toString()) {
+        // Allow starting or restarting by pressing player's number key (or Czech equiv)
+        if (!this.gameActive) {
+            const p1Keys = ['1', '+'];
+            const p2Keys = ['2', 'ě'];
+            const myKeys = this.playerNumber === 1 ? p1Keys : p2Keys;
+            if (myKeys.includes(e.key)) {
                 this.start();
             }
             return;
         }
-
-        if (!this.gameActive) return;
 
         // Player controls (WSAD for Player 1, Arrows for Player 2)
         if (this.playerNumber === 1) {
@@ -608,9 +712,19 @@ window.addEventListener('keydown', (e) => {
         Tetris.currentLevel = 1;
         Tetris.updateLevelDisplay();
         game1.stop();
-        game1.reset();
         game2.stop();
-        game2.reset();
+
+        // Wipe both screens then reset
+        let wipeDone = 0;
+        const afterWipe = () => {
+            wipeDone++;
+            if (wipeDone === 2) {
+                game1.reset();
+                game2.reset();
+            }
+        };
+        game1.screenWipe(afterWipe);
+        game2.screenWipe(afterWipe);
     }
 
     if (e.key === 'm' || e.key === 'M') {
