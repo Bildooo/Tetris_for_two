@@ -92,7 +92,7 @@ class Tetris {
     static playRandomTrack() {
         if (!Tetris.mainMusic) return;
         const randomTrack = Tetris.playlist[Math.floor(Math.random() * Tetris.playlist.length)];
-        Tetris.mainMusic.src = `data/music/${randomTrack}`;
+        Tetris.mainMusic.src = `data/Music/${randomTrack}`;
         Tetris.mainMusic.volume = 0.3;
 
         // Ensure manual play is respected by browser
