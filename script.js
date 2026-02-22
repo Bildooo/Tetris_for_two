@@ -205,6 +205,19 @@ class Tetris {
             Tetris.currentLevel = 1;
             Tetris.updateLevelDisplay();
             Tetris.pieceSequence = [];
+            // Refresh quotas for both instances to Level 1
+            if (window.game1) {
+                window.game1.quota = Tetris.getLevelQuota(1);
+                window.game1.updateQuotaDisplay();
+            }
+            if (window.game2) {
+                window.game2.quota = Tetris.getLevelQuota(1);
+                window.game2.updateQuotaDisplay();
+            }
+        } else {
+            // If the other player is already in a higher level, match their level quota
+            this.quota = Tetris.getLevelQuota(Tetris.currentLevel);
+            this.updateQuotaDisplay();
         }
 
         // Allow restart after game over (player presses their number again)
