@@ -192,7 +192,7 @@ class Tetris {
         this.updateQuotaDisplay();
         this.gameOverElement.textContent = '';
         if (!this.gameActive && !this.gameOver) {
-            this.startMsgElement.style.display = 'block';
+            this.startMsgElement.style.display = 'flex';
         }
     }
 
@@ -219,6 +219,7 @@ class Tetris {
         if (this.gameActive) return;
 
         this.startMsgElement.style.display = 'none';
+        this.gameOverElement.style.display = 'flex';
         this.gameOverElement.textContent = '';
 
         // Wipe screen first, then start the game
@@ -290,11 +291,10 @@ class Tetris {
         this.gameOverElement.textContent = 'GAME OVER!';
         this.blinkInterval = setInterval(() => {
             blinkState = !blinkState;
-            // Use non-breaking spaces to keep widths more stable if possible, or just alternate
             this.gameOverElement.textContent = blinkState
                 ? 'GAME OVER!'
                 : `${startKey} TO START`;
-        }, 800);
+        }, 2000); // Synchronized with 2s cinematicFade animation
     }
 
     spawnPiece() {
@@ -469,6 +469,7 @@ class Tetris {
         this.gameOver = false;
         this.gameActive = true;
         this.startMsgElement.style.display = 'none';
+        this.gameOverElement.style.display = 'flex';
         this.gameOverElement.textContent = '';
 
         this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
