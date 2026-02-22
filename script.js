@@ -67,8 +67,8 @@ class Tetris {
                 'Where Time Dropped Dead.mp3'
             ];
             Tetris.mainMusic = new Audio();
-            Tetris.musicEnabled = true;
-            Tetris.playRandomTrack();
+            Tetris.musicEnabled = false;
+            Tetris.updateMusicUI();
         }
 
         // Volume settings
@@ -90,7 +90,7 @@ class Tetris {
     static mainMusic = null;
     static playlist = [];
     static currentTrackIndex = -1;
-    static musicEnabled = true;
+    static musicEnabled = false;
     static currentLevel = 1;
 
     static getLevelQuota(level) {

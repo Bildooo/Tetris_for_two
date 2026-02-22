@@ -13,94 +13,102 @@
 
 <body>
     <div class="game-container">
-        <!-- Player 1 -->
-        <div class="player-area" id="player1-area">
-            <div class="player-header">
-                <span class="player-title">Player 1</span>
-                <span class="score" id="score1">0</span>
-            </div>
-            <div class="player-content">
-                <canvas id="canvas1" width="300" height="600"></canvas>
-            </div>
-            <div class="game-over" id="startMsg1">Press 1 to start</div>
-            <!--  -->
-            <div class="game-over" id="gameOver1"></div>
-        </div>
-
-        <!-- Central Panel -->
-        <div class="central-panel">
-            <img src="data/LogoInGame.png" alt="Logo" class="game-logo">
-            <div class="level-container">
-                <div class="level-indicator-box">
-                    <div id="level-display" class="level-indicator">LEVEL 1</div>
+        <div class="game-layout">
+            <!-- Player 1 -->
+            <div class="player-area" id="player1-area">
+                <div class="player-header">
+                    <span class="player-title">Player 1</span>
+                    <span class="score" id="score1">0</span>
+                </div>
+                <div class="player-content">
+                    <canvas id="canvas1" width="300" height="600"></canvas>
+                </div>
+                <div class="message-area">
+                    <div class="game-over" id="startMsg1">Press 1 to start</div>
+                    <div class="game-over" id="gameOver1"></div>
                 </div>
             </div>
 
-            <div class="central-panel_quotas">
-                <h2 class="quota-title">QUOTA</h2>
-
-                <div class="quota-group q1">
-                    <div class="quota-label">1 LINES</div>
-                    <div class="quota-values">
-                        <span class="quota-value" id="p1-quota1">10</span>
-                        <span class="quota-value" id="p2-quota1">10</span>
+            <!-- Central Panel -->
+            <div class="central-panel">
+                <img src="data/LogoInGame.png" alt="Logo" class="game-logo">
+                <div class="level-container">
+                    <div class="level-indicator-box">
+                        <div id="level-display" class="level-indicator">LEVEL 1</div>
                     </div>
                 </div>
 
-                <div class="quota-group q2">
-                    <div class="quota-label">2 LINES</div>
-                    <div class="quota-values">
-                        <span class="quota-value" id="p1-quota2">05</span>
-                        <span class="quota-value" id="p2-quota2">05</span>
+                <div class="central-panel_quotas">
+                    <h2 class="quota-title">QUOTA</h2>
+
+                    <div class="quota-group q1">
+                        <div class="quota-label">1 LINES</div>
+                        <div class="quota-values">
+                            <span class="quota-value" id="p1-quota1">06</span>
+                            <span class="quota-value" id="p2-quota1">06</span>
+                        </div>
+                    </div>
+
+                    <div class="quota-group q2">
+                        <div class="quota-label">2 LINES</div>
+                        <div class="quota-values">
+                            <span class="quota-value" id="p1-quota2">00</span>
+                            <span class="quota-value" id="p2-quota2">00</span>
+                        </div>
+                    </div>
+
+                    <div class="quota-group q3">
+                        <div class="quota-label">3 LINES</div>
+                        <div class="quota-values">
+                            <span class="quota-value" id="p1-quota3">00</span>
+                            <span class="quota-value" id="p2-quota3">00</span>
+                        </div>
+                    </div>
+
+                    <div class="quota-group q4">
+                        <div class="quota-label">4 LINES</div>
+                        <div class="quota-values">
+                            <span class="quota-value" id="p1-quota4">00</span>
+                            <span class="quota-value" id="p2-quota4">00</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="quota-group q3">
-                    <div class="quota-label">3 LINES</div>
-                    <div class="quota-values">
-                        <span class="quota-value" id="p1-quota3">02</span>
-                        <span class="quota-value" id="p2-quota3">02</span>
-                    </div>
-                </div>
 
-                <div class="quota-group q4">
-                    <div class="quota-label">4 LINES</div>
-                    <div class="quota-values">
-                        <span class="quota-value" id="p1-quota4">00</span>
-                        <span class="quota-value" id="p2-quota4">00</span>
+                <div class="instructions">
+                    <div class="controls-block">
+                        <!-- <div class="instruction-p">[P] Reset level</div>
+                        <div class="instruction-p">[B] Random Track </div> -->
+                        <!-- <div class="instruction-p">[M] Music: <span id="music-status">ON</span></div> -->
+                        <div class="instruction-p">[M] Music: <span id="music-status">OFF</span></div>
                     </div>
                 </div>
             </div>
 
-
-            <div class="instructions">
-                <div class="controls-block">
-                    <!-- <div class="instruction-p">[P] Reset level</div>
-                    <div class="instruction-p">[B] Random Track </div> -->
-                    <!-- <div class="instruction-p">[M] Music: <span id="music-status">ON</span></div> -->
-                    <div class="instruction-p">[M] Music: <span id="music-status">ON</span></div>
+            <!-- Player 2 -->
+            <div class="player-area" id="player2-area">
+                <div class="player-header">
+                    <span class="player-title">Player 2</span>
+                    <span class="score" id="score2">0</span>
+                </div>
+                <div class="player-content">
+                    <canvas id="canvas2" width="300" height="600"></canvas>
+                </div>
+                <div class="message-area">
+                    <div class="game-over" id="startMsg2">Press 2 to start</div>
+                    <div class="game-over" id="gameOver2"></div>
                 </div>
             </div>
-        </div>
-
-        <!-- Player 2 -->
-        <div class="player-area" id="player2-area">
-            <div class="player-header">
-                <span class="player-title">Player 2</span>
-                <span class="score" id="score2">0</span>
-            </div>
-            <div class="player-content">
-                <canvas id="canvas2" width="300" height="600"></canvas>
-            </div>
-            <!-- <div class="start-message" id="startMsg2">Press 2 to start</div> -->
-            <div class="game-over" id="startMsg2">Press 2 to start</div>
-            <div class="game-over" id="gameOver2"></div>
         </div>
 
         <footer class="game-footer_1">
-            <strong style="font-size: 1.1em;color:#ffffff;">[P]</strong> - Reset level &nbsp;&nbsp;&nbsp; <strong
-                style="font-size: 1.1em;color:#ffffff;">[B]</strong> - Random
-            Track &nbsp;&nbsp;&nbsp; <strong style="font-size: 1.1em;color:#ffffff;">[N]</strong> - Next track
+            <strong style="font-size: 1.3em;color:hsl(0, 61%, 31%);">WSAD</strong>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <strong style="font-size: 1.1em;color:#ffffff;">[P]</strong> - Reset level
+            &nbsp;&nbsp;&nbsp; <strong style="font-size: 1.1em;color:#ffffff;">[B]</strong> - Random
+            Track &nbsp;&nbsp;&nbsp; <strong style="font-size: 1.1em;color:#ffffff;">[N]</strong> - Next
+            track&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <strong style="font-size: 1.3em;color:hsl(0, 61%, 31%);">Cursor</strong>
         </footer>
 
 

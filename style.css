@@ -24,10 +24,13 @@ body {
 
 .game-container {
     display: flex;
+    flex-direction: column;
+    /* Stack game and footers vertically */
+    align-items: center;
     position: relative;
     gap: 0.5rem;
+    /* Gap between game and footers */
     padding: 1.5rem;
-    padding-bottom: 5rem;
     background: var(--glass-bg);
     backdrop-filter: blur(12px);
     border: 1px solid var(--glass-border);
@@ -35,18 +38,29 @@ body {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
+.game-layout {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: center;
+}
+
 .player-area {
     margin-bottom: 0px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
+    gap: 0rem;
+    padding: 0.1rem 10px;
+    /* 10px horizontal padding as requested */
     background: rgba(0, 0, 0, 0.4);
     border-radius: 20px;
     border: 1px solid var(--glass-border);
-    min-height: auto;
+    min-height: 720px;
+    /* Increased height to allow the message to move lower */
     position: relative;
+    justify-content: flex-start;
 }
 
 .player-header {
@@ -102,16 +116,22 @@ canvas {
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    gap: 0.6rem;
+    gap: 0.4rem;
+    /* Reduced gap */
     min-width: 280px;
     background: rgba(0, 0, 0, 0.5);
-    padding: 1rem 0.5rem;
+    padding: 0.5rem 0.4rem;
+    /* Tighter padding */
     border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.05);
+    min-height: 680px;
+    /* Matches player-area height */
+    box-sizing: border-box;
 }
 
 .game-logo {
-    max-width: 280px;
+    max-width: 226px;
+    padding-top: 20px;
     height: auto;
     border-radius: 15px;
     filter: drop-shadow(0 0 15px rgba(0, 240, 240, 0.5));
@@ -124,6 +144,7 @@ canvas {
     align-items: center;
     width: 100%;
     margin-bottom: 0px;
+    margin-top: 0.8rem;
 }
 
 .level-indicator-box {
@@ -164,6 +185,7 @@ canvas {
     box-sizing: border-box;
     background-color: #001121;
     margin-bottom: 0px;
+    margin-top: 0.8rem;
 }
 
 .quota-title {
@@ -180,6 +202,7 @@ canvas {
     background: rgba(0, 0, 0, 0.4);
     width: 100%;
     box-sizing: border-box;
+    margin-bottom: 4px;
 }
 
 .quota-group {
@@ -194,6 +217,12 @@ canvas {
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
     text-align: center;
+    margin-bottom: 4px;
+    /* Visual separation between quota frames */
+}
+
+.quota-group:first-of-type {
+    margin-top: 0;
 }
 
 .quota-label {
@@ -263,9 +292,9 @@ canvas {
 }
 
 .instructions {
-    margin-top: 0.5rem;
+    margin-top: 0.8rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: 15px;
     background-color: #001121;
     display: flex;
     flex-direction: column;
@@ -286,16 +315,6 @@ canvas {
 }
 
 .instruction-p {
-    /* font-family: var(--modern-font);
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 0.7rem;
-    border: 1px solid var(--glass-border);
-    padding: 3px 10px;
-    border-radius: 100px;
-    margin-top: 0;
-    font-family: var(--retro-font);
-    font-size: 1.35rem; */
-
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -309,15 +328,11 @@ canvas {
 }
 
 .game-footer_1 {
-    margin-top: 0;
-
-    position: absolute;
-    bottom: 3.2rem;
-    left: 1.5rem;
-    right: 1.5rem;
+    margin-top: 0.2rem;
+    width: 100%;
     background: rgba(255, 255, 255, 0.05);
     border-top: 1px solid var(--glass-border);
-    padding: 4px 0px;
+    padding: 6px 0px;
     text-align: center;
     font-size: 0.8rem;
     color: rgba(160, 160, 160, 0.825);
@@ -329,14 +344,11 @@ canvas {
 
 .game-footer_2 {
     margin-top: 0;
-
-    position: absolute;
-    bottom: 1.2rem;
-    left: 1.5rem;
-    right: 1.5rem;
+    width: 100%;
     background: rgba(255, 255, 255, 0.05);
     border-top: 1px solid var(--glass-border);
-    padding: 4px 0px;
+    padding: 6px 0px;
+    /* Reduced padding */
     text-align: center;
     font-size: 0.8rem;
     color: rgba(160, 160, 160, 0.825);
@@ -382,12 +394,26 @@ canvas {
     font-weight: 800;
     text-transform: uppercase;
     margin-top: 0;
-    line-height: 1;
+    line-height: 1.25;
     text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
     animation: pulse 1s infinite ease-in-out;
     text-align: center;
+    min-height: 1.2em;
+    /* Reduced reserved space */
+}
+
+.message-area {
+    flex: 1;
+    /* Takes up all remaining space below canvas */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    /* Centers the content vertically in that space */
+    align-items: center;
+    width: 100%;
 }
 
 .game-over:empty {
     display: none;
+    /* Hide if no message so it doesn't take space */
 }
