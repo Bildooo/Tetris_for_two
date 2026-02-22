@@ -191,6 +191,7 @@ class Tetris {
         this.updateScore();
         this.updateQuotaDisplay();
         this.gameOverElement.textContent = '';
+        this.gameOverElement.style.display = 'none';
         if (!this.gameActive && !this.gameOver) {
             this.startMsgElement.style.display = 'flex';
         }
@@ -219,7 +220,7 @@ class Tetris {
         if (this.gameActive) return;
 
         this.startMsgElement.style.display = 'none';
-        this.gameOverElement.style.display = 'flex';
+        this.gameOverElement.style.display = 'none'; // Hide both during active gameplay to save space
         this.gameOverElement.textContent = '';
 
         // Wipe screen first, then start the game
@@ -284,6 +285,7 @@ class Tetris {
     gameOverHandler() {
         this.stop();
         this.gameOver = true;
+        this.gameOverElement.style.display = 'flex'; // Show only when game is over
 
         // Blink between GAME OVER and restart hint
         const startKey = this.playerNumber === 1 ? 'PRESS [1]' : 'PRESS [2]';
@@ -469,7 +471,7 @@ class Tetris {
         this.gameOver = false;
         this.gameActive = true;
         this.startMsgElement.style.display = 'none';
-        this.gameOverElement.style.display = 'flex';
+        this.gameOverElement.style.display = 'none'; // Hide during active gameplay
         this.gameOverElement.textContent = '';
 
         this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
