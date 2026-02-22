@@ -232,6 +232,7 @@ class Tetris {
             this.updateScore();
 
             // Create first piece
+            this.pieceIndex = 0; // Ensure both players start with the same sequence
             this.spawnPiece();
 
             // Start background music on first start
@@ -284,15 +285,16 @@ class Tetris {
         this.gameOver = true;
 
         // Blink between GAME OVER and restart hint
-        const startKey = this.playerNumber === 1 ? 'Press [1]' : 'Press [2]';
+        const startKey = this.playerNumber === 1 ? 'PRESS [1]' : 'PRESS [2]';
         let blinkState = true;
         this.gameOverElement.textContent = 'GAME OVER!';
         this.blinkInterval = setInterval(() => {
             blinkState = !blinkState;
+            // Use non-breaking spaces to keep widths more stable if possible, or just alternate
             this.gameOverElement.textContent = blinkState
                 ? 'GAME OVER!'
                 : `${startKey} TO START`;
-        }, 1000);
+        }, 800);
     }
 
     spawnPiece() {
@@ -416,6 +418,7 @@ class Tetris {
         // Immediately wipe both canvases and display win message
         Tetris.currentLevel++;
         Tetris.updateLevelDisplay();
+        Tetris.pieceSequence = []; // Reset sequence for next level
 
         let wipeDone = 0;
         const afterWipe = (game) => {
@@ -473,6 +476,7 @@ class Tetris {
         this.quota = Tetris.getLevelQuota(Tetris.currentLevel);
         this.updateScore();
         this.updateQuotaDisplay();
+        this.pieceIndex = 0; // Reset index for each level start
         this.spawnPiece();
         this.updateSpeed(500);
     }
