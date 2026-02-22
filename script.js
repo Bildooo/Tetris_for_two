@@ -284,7 +284,7 @@ class Tetris {
         this.gameOver = true;
 
         // Blink between GAME OVER and restart hint
-        const startKey = this.playerNumber === 1 ? 'Press 1' : 'Press 2';
+        const startKey = this.playerNumber === 1 ? 'Press [1]' : 'Press [2]';
         let blinkState = true;
         this.gameOverElement.textContent = 'GAME OVER!';
         this.blinkInterval = setInterval(() => {
