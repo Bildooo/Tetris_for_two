@@ -31,6 +31,11 @@ class Tetris {
             destroyLine: new Audio('data/destroyLine.wav')
         };
 
+        // Brick image
+        this.brickImage = new Image();
+        this.brickImage.src = 'data/cihla.png';
+
+
         // Initialize static music if not already done
         if (!Tetris.mainMusic) {
             Tetris.playlist = [
@@ -91,7 +96,7 @@ class Tetris {
     static playlist = [];
     static currentTrackIndex = -1;
     static musicEnabled = false;
-    static currentLevel = 1;
+    static currentLevel = 2;
 
     static getLevelQuota(level) {
         // Algorithmic quota generator
@@ -202,7 +207,7 @@ class Tetris {
         const game1Active = window.game1 && window.game1.gameActive;
         const game2Active = window.game2 && window.game2.gameActive;
         if (!game1Active && !game2Active) {
-            Tetris.currentLevel = 1;
+            Tetris.currentLevel = 2;
             Tetris.updateLevelDisplay();
             Tetris.pieceSequence = [];
             // Refresh quotas for both instances to Level 1
@@ -236,27 +241,25 @@ class Tetris {
         this.gameOverElement.style.display = 'none'; // Hide both during active gameplay to save space
         this.gameOverElement.textContent = '';
 
-        // Wipe screen first, then start the game
-        this.screenWipe(() => {
-            this.gameActive = true;
-            this.gameOver = false;
+        // Load level map if even level
+        this.loadLevelMap().then(() => {
+            // Wipe screen first, then start the game
+            this.screenWipe(() => {
+                this.gameActive = true;
+                this.gameOver = false;
 
-            // Reset board
-            this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
-            this.score = 0;
-            this.updateScore();
+                // Create first piece
+                this.pieceIndex = 0; // Ensure both players start with the same sequence
+                this.spawnPiece();
 
-            // Create first piece
-            this.pieceIndex = 0; // Ensure both players start with the same sequence
-            this.spawnPiece();
+                // Start background music on first start
+                if (Tetris.musicEnabled && Tetris.mainMusic.paused) {
+                    Tetris.mainMusic.play().catch(e => console.log("Music play blocked:", e));
+                }
 
-            // Start background music on first start
-            if (Tetris.musicEnabled && Tetris.mainMusic.paused) {
-                Tetris.mainMusic.play().catch(e => console.log("Music play blocked:", e));
-            }
-
-            // Start falling
-            this.updateSpeed(500);
+                // Start falling
+                this.updateSpeed(500);
+            });
         });
     }
 
@@ -480,14 +483,14 @@ class Tetris {
     }
 
     // Start without screen wipe – used after automatic level transition
-    startDirect() {
+    async startDirect() {
         this.gameOver = false;
         this.gameActive = true;
         this.startMsgElement.style.display = 'none';
         this.gameOverElement.style.display = 'none'; // Hide during active gameplay
         this.gameOverElement.textContent = '';
 
-        this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
+        await this.loadLevelMap();
         this.score = 0;
         this.quota = Tetris.getLevelQuota(Tetris.currentLevel);
         this.updateScore();
@@ -496,6 +499,42 @@ class Tetris {
         this.spawnPiece();
         this.updateSpeed(500);
     }
+
+    async loadLevelMap() {
+        // Only load for even levels
+        if (Tetris.currentLevel % 2 !== 0) {
+            this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
+            return;
+        }
+
+        try {
+            const response = await fetch(`data/level_${Tetris.currentLevel}.txt`);
+            if (!response.ok) throw new Error('Level data not found');
+            const data = await response.text();
+
+            // Clear board
+            this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
+
+            const lines = data.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            // Reverse of "obracene": last line of file is Row 19 (bottom)
+            const startRow = this.rows - lines.length;
+            for (let i = 0; i < lines.length && i < this.rows; i++) {
+                const line = lines[i];
+                const boardY = startRow + i;
+                if (boardY < 0) continue;
+                for (let x = 0; x < this.cols && x < line.length; x++) {
+                    const char = line[x];
+                    if (char === '1' || char === 'X') {
+                        this.board[boardY][x] = 8; // 8 is reserved for brick
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn(`Level ${Tetris.currentLevel} data could not be loaded, starting with empty board.`, e);
+            this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
+        }
+    }
+
 
     moveDown() {
         if (!this.gameActive || !this.piece) return;
@@ -667,14 +706,26 @@ class Tetris {
     }
 
     drawBlock(x, y, type) {
+        const bx = x * this.cellSize;
+        const by = y * this.cellSize;
+        const size = this.cellSize - 2;
+
+        if (type === 8) {
+            // Draw brick image
+            if (this.brickImage.complete && this.brickImage.naturalWidth !== 0) {
+                this.ctx.drawImage(this.brickImage, bx + 1, by + 1, size, size);
+            } else {
+                // Fallback while image is loading
+                this.ctx.fillStyle = '#7c2d12';
+                this.ctx.fillRect(bx + 1, by + 1, size, size);
+            }
+            return;
+        }
+
         let color = this.colors[type];
         if (this.playerNumber === 2) {
             color = this.darkenColor(color, 25);
         }
-
-        const bx = x * this.cellSize;
-        const by = y * this.cellSize;
-        const size = this.cellSize - 2;
 
         // Hlavní čtverec
         this.ctx.fillStyle = color;
@@ -797,7 +848,7 @@ window.addEventListener('keydown', (e) => {
 
     if (e.key === 'p' || e.key === 'P') {
         Tetris.pieceSequence = [];
-        Tetris.currentLevel = 1;
+        Tetris.currentLevel = 2;
         Tetris.updateLevelDisplay();
         game1.stop();
         game2.stop();
