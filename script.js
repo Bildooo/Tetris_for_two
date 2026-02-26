@@ -1,3 +1,16 @@
+const QUOTAS = [
+    { 1: 5, 2: 0, 3: 0, 4: 0 }, // Level 1
+    { 1: 5, 2: 2, 3: 0, 4: 0 }, // Level 2
+    { 1: 8, 2: 2, 3: 1, 4: 0 }, // Level 3
+    { 1: 9, 2: 3, 3: 1, 4: 0 }, // Level 4
+    { 1: 0, 2: 0, 3: 0, 4: 1 }, // Level 5
+    { 1: 11, 2: 5, 3: 2, 4: 2 }, // Level 6
+    { 1: 12, 2: 6, 3: 3, 4: 2 }, // Level 7
+    { 1: 13, 2: 7, 3: 3, 4: 3 }, // Level 8
+    { 1: 14, 2: 8, 3: 4, 4: 3 }, // Level 9
+    { 1: 15, 2: 9, 3: 4, 4: 4 }  // Level 10
+];
+
 class Tetris {
     constructor(canvasId, scoreId, gameOverId, startMsgId, playerNumber) {
         this.canvas = document.getElementById(canvasId);
@@ -20,7 +33,8 @@ class Tetris {
             '#f0a000', // L (Orange)
             '#0000f0', // J (Blue)
             '#00f000', // S (Green)
-            '#f00000'  // Z (Red)
+            '#f00000', // Z (Red)
+            '#ffffff'  // 8 (White/Custom) - Added for mapping
         ];
 
         // Sounds
@@ -99,16 +113,13 @@ class Tetris {
     static currentLevel = 2;
 
     static getLevelQuota(level) {
-        // Algorithmic quota generator
-        // Each level: +1 to 1L and 2L
-        // Every 3rd level: +1 to 3L
-        // Every 4th level: +1 to 4L
-        return {
-            1: 6 + (level - 1),
-            2: 0 + (level - 1),
-            3: Math.floor(level / 3),
-            4: Math.floor(level / 5)
-        };
+        // Vrací hodnoty z globálního pole QUOTAS na začátku souboru
+        const q = QUOTAS[level - 1];
+        if (q) return { ...q };
+
+        // Fallback pro úrovně mimo definované pole (použije poslední známou kvótu)
+        const lastQ = QUOTAS[QUOTAS.length - 1];
+        return { ...lastQ };
     }
 
     static playRandomTrack() {
@@ -501,15 +512,13 @@ class Tetris {
     }
 
     async loadLevelMap() {
-        // Only load for even levels
-        if (Tetris.currentLevel % 2 !== 0) {
-            this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
-            return;
-        }
-
         try {
-            const response = await fetch(`data/level_${Tetris.currentLevel}.txt`);
-            if (!response.ok) throw new Error('Level data not found');
+            const response = await fetch(`data/levels/level_${Tetris.currentLevel}.txt`);
+            if (!response.ok) {
+                // If file doesn't exist, start with empty board
+                this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
+                return;
+            }
             const data = await response.text();
 
             // Clear board
@@ -524,8 +533,12 @@ class Tetris {
                 if (boardY < 0) continue;
                 for (let x = 0; x < this.cols && x < line.length; x++) {
                     const char = line[x];
-                    if (char === '1' || char === 'X') {
-                        this.board[boardY][x] = 8; // 8 is reserved for brick
+                    if (char === 'X' || char === 'x') {
+                        this.board[boardY][x] = 9; // Brick
+                    } else if (char >= '1' && char <= '8') {
+                        this.board[boardY][x] = parseInt(char); // 1->1, 2->2, ..., 8->8 (Matches piece colors)
+                    } else if (char === '9') {
+                        this.board[boardY][x] = 8; // Map 9 to the 9th color (index 8, white)
                     }
                 }
             }
@@ -710,7 +723,7 @@ class Tetris {
         const by = y * this.cellSize;
         const size = this.cellSize - 2;
 
-        if (type === 8) {
+        if (type === 9) {
             // Draw brick image
             if (this.brickImage.complete && this.brickImage.naturalWidth !== 0) {
                 this.ctx.drawImage(this.brickImage, bx + 1, by + 1, size, size);
