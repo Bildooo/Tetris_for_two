@@ -234,9 +234,11 @@ canvas {
 
 .quota-values {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     width: 100%;
     font-family: var(--retro-font);
+    padding: 0 10px;
+    box-sizing: border-box;
 }
 
 .quota-value {

@@ -1,14 +1,14 @@
 const QUOTAS = [
     { 1: 5, 2: 0, 3: 0, 4: 0 }, // Level 1
     { 1: 5, 2: 2, 3: 0, 4: 0 }, // Level 2
-    { 1: 8, 2: 2, 3: 1, 4: 0 }, // Level 3
-    { 1: 9, 2: 3, 3: 1, 4: 0 }, // Level 4
+    { 1: 6, 2: 2, 3: 0, 4: 0 }, // Level 3
+    { 1: 4, 2: 4, 3: 0, 4: 0 }, // Level 4
     { 1: 0, 2: 0, 3: 0, 4: 1 }, // Level 5
-    { 1: 11, 2: 5, 3: 2, 4: 2 }, // Level 6
-    { 1: 12, 2: 6, 3: 3, 4: 2 }, // Level 7
-    { 1: 13, 2: 7, 3: 3, 4: 3 }, // Level 8
-    { 1: 14, 2: 8, 3: 4, 4: 3 }, // Level 9
-    { 1: 15, 2: 9, 3: 4, 4: 4 }  // Level 10
+    { 1: 6, 2: 5, 3: 1, 4: 0 }, // Level 6
+    { 1: 7, 2: 6, 3: 1, 4: 0 }, // Level 7
+    { 1: 8, 2: 7, 3: 1, 4: 0 }, // Level 8
+    { 1: 9, 2: 8, 3: 1, 4: 1 }, // Level 9
+    { 1: 10, 2: 8, 3: 1, 4: 1 }  // Level 10
 ];
 
 class Tetris {
@@ -99,6 +99,7 @@ class Tetris {
         // Loop for dropping sound
         this.sounds.droped.loop = true;
 
+        this.showGrid = false;
         this.reset();
 
         // Controls
@@ -110,10 +111,12 @@ class Tetris {
     static playlist = [];
     static currentTrackIndex = -1;
     static musicEnabled = false;
-    static currentLevel = 2;
+    static wipeSpeed = 70; // Rychlost promazávání obrazovky (ms za krok)
+    static currentLevel = 0;
 
     static getLevelQuota(level) {
         // Vrací hodnoty z globálního pole QUOTAS na začátku souboru
+        if (level < 1) return { 1: 0, 2: 0, 3: 0, 4: 0 };
         const q = QUOTAS[level - 1];
         if (q) return { ...q };
 
@@ -218,7 +221,7 @@ class Tetris {
         const game1Active = window.game1 && window.game1.gameActive;
         const game2Active = window.game2 && window.game2.gameActive;
         if (!game1Active && !game2Active) {
-            Tetris.currentLevel = 2;
+            Tetris.currentLevel = 0;
             Tetris.updateLevelDisplay();
             Tetris.pieceSequence = [];
             // Refresh quotas for both instances to Level 1
@@ -464,10 +467,10 @@ class Tetris {
             ctx.fillText(`PLAYER ${playerNum}`, w / 2, h / 2 - 30);
             ctx.fillStyle = '#00f0f0';
             ctx.font = 'bold 18px Courier New';
-            ctx.fillText(`WON LEVEL ${Tetris.currentLevel - 1}!`, w / 2, h / 2 + 5);
+            ctx.fillText(`WON ROUND: ${Tetris.currentLevel - 1}!`, w / 2, h / 2 + 5);
             ctx.fillStyle = 'rgba(255,255,255,0.4)';
             ctx.font = '14px Courier New';
-            ctx.fillText('Next level starting...', w / 2, h / 2 + 40);
+            ctx.fillText('Next round starting...', w / 2, h / 2 + 40);
 
             wipeDone++;
             if (wipeDone === 2) {
@@ -489,7 +492,7 @@ class Tetris {
     static updateLevelDisplay() {
         const levelElem = document.getElementById('level-display');
         if (levelElem) {
-            levelElem.textContent = `LEVEL ${Tetris.currentLevel}`;
+            levelElem.textContent = `ROUND: ${Tetris.currentLevel}`;
         }
     }
 
@@ -512,6 +515,10 @@ class Tetris {
     }
 
     async loadLevelMap() {
+        if (Tetris.currentLevel < 1) {
+            this.board = Array(this.rows).fill().map(() => Array(this.cols).fill(0));
+            return;
+        }
         try {
             const response = await fetch(`data/levels/level_${Tetris.currentLevel}.txt`);
             if (!response.ok) {
@@ -644,35 +651,61 @@ class Tetris {
         const canvasWidth = this.canvas.width;
         const canvasHeight = this.canvas.height;
 
-        // Sweeper position = row index of the WHITE (leading) band
-        // Starts below the canvas and moves upward (decrements each step)
-        let sweeper = totalRows - 1; // start at bottom row
-        const msPerStep = 70; // 2x slower for dramatic effect
+        const msPerStep = Tetris.wipeSpeed;
+        let sweeper = 0;
+        let phase = 1;
 
         const interval = setInterval(() => {
-            // Draw 3 bands at sweeper, sweeper+1, sweeper+2
-            // White is at sweeper (leading/top), gray at +1, black at +2 (trailing)
-            const bands = [
-                { row: sweeper, color: '#ffffff' },  // white – leads upward
-                { row: sweeper + 1, color: '#555555' },  // gray  – middle
-                { row: sweeper + 2, color: '#000000' },  // black – trailing
-            ];
-
-            for (const band of bands) {
-                if (band.row >= 0 && band.row < totalRows) {
-                    ctx.fillStyle = band.color;
-                    ctx.fillRect(0, band.row * cellSize, canvasWidth, cellSize);
+            if (phase === 1) {
+                // Phase 1: Top to Bottom transition (Dark -> Medium -> Light Gray stays)
+                // Row sweeper: Dark Gray (#444)
+                // Row sweeper-1: Medium Gray (#888)
+                // Row sweeper-2: Light Gray (#CCC) - this one stays
+                if (sweeper < totalRows) {
+                    ctx.fillStyle = '#444444';
+                    ctx.fillRect(0, sweeper * cellSize, canvasWidth, cellSize);
                 }
-            }
+                if (sweeper - 1 >= 0 && sweeper - 1 < totalRows) {
+                    ctx.fillStyle = '#888888';
+                    ctx.fillRect(0, (sweeper - 1) * cellSize, canvasWidth, cellSize);
+                }
+                if (sweeper - 2 >= 0 && sweeper - 2 < totalRows) {
+                    ctx.fillStyle = '#cccccc';
+                    ctx.fillRect(0, (sweeper - 2) * cellSize, canvasWidth, cellSize);
+                }
 
-            sweeper--;
+                sweeper++;
 
-            // Done when black band (sweeper+2) has also left the top (sweeper+2 < 0 → sweeper < -2)
-            if (sweeper < -2) {
-                clearInterval(interval);
-                ctx.fillStyle = '#000000';
-                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-                if (onComplete) onComplete();
+                if (sweeper >= totalRows + 3) {
+                    phase = 2;
+                    sweeper = totalRows - 1; // Start from bottom for phase 2
+                }
+            } else {
+                // Phase 2: Bottom to Top (Light Gray -> Medium -> Dark -> Black)
+                // Row sweeper: Medium Gray (#888)
+                // Row sweeper+1: Dark Gray (#444)
+                // Row sweeper+2: Black (#000)
+                if (sweeper >= 0 && sweeper < totalRows) {
+                    ctx.fillStyle = '#888888';
+                    ctx.fillRect(0, sweeper * cellSize, canvasWidth, cellSize);
+                }
+                if (sweeper + 1 >= 0 && sweeper + 1 < totalRows) {
+                    ctx.fillStyle = '#444444';
+                    ctx.fillRect(0, (sweeper + 1) * cellSize, canvasWidth, cellSize);
+                }
+                if (sweeper + 2 >= 0 && sweeper + 2 < totalRows) {
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(0, (sweeper + 2) * cellSize, canvasWidth, cellSize);
+                }
+
+                sweeper--;
+
+                if (sweeper < -3) {
+                    clearInterval(interval);
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                    if (onComplete) onComplete();
+                }
             }
         }, msPerStep);
     }
@@ -701,20 +734,22 @@ class Tetris {
             }
         }
 
-        // Vykreslení mřížky (jemnější)
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-        this.ctx.lineWidth = 1;
-        for (let i = 0; i <= this.cols; i++) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(i * this.cellSize, 0);
-            this.ctx.lineTo(i * this.cellSize, this.canvas.height);
-            this.ctx.stroke();
-        }
-        for (let i = 0; i <= this.rows; i++) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(0, i * this.cellSize);
-            this.ctx.lineTo(this.canvas.width, i * this.cellSize);
-            this.ctx.stroke();
+        // Vykreslení mřížky (jemnější, pokud je zapnutá)
+        if (this.showGrid) {
+            this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)'; // Mírně výraznější pro viditelnost
+            this.ctx.lineWidth = 1;
+            for (let i = 0; i <= this.cols; i++) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(i * this.cellSize, 0);
+                this.ctx.lineTo(i * this.cellSize, this.canvas.height);
+                this.ctx.stroke();
+            }
+            for (let i = 0; i <= this.rows; i++) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, i * this.cellSize);
+                this.ctx.lineTo(this.canvas.width, i * this.cellSize);
+                this.ctx.stroke();
+            }
         }
     }
 
@@ -861,7 +896,7 @@ window.addEventListener('keydown', (e) => {
 
     if (e.key === 'p' || e.key === 'P') {
         Tetris.pieceSequence = [];
-        Tetris.currentLevel = 2;
+        Tetris.currentLevel = 0;
         Tetris.updateLevelDisplay();
         game1.stop();
         game2.stop();
@@ -877,6 +912,13 @@ window.addEventListener('keydown', (e) => {
         };
         game1.screenWipe(afterWipe);
         game2.screenWipe(afterWipe);
+    }
+
+    if (e.key === 'g' || e.key === 'G') {
+        game1.showGrid = !game1.showGrid;
+        game2.showGrid = !game2.showGrid;
+        game1.draw();
+        game2.draw();
     }
 
     if (e.key === 'm' || e.key === 'M') {
