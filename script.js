@@ -2,8 +2,8 @@ const QUOTAS = [
     { 1: 5, 2: 0, 3: 0, 4: 0 }, // Level 1
     { 1: 5, 2: 2, 3: 0, 4: 0 }, // Level 2
     { 1: 6, 2: 2, 3: 0, 4: 0 }, // Level 3
-    { 1: 4, 2: 4, 3: 0, 4: 0 }, // Level 4
-    { 1: 0, 2: 0, 3: 0, 4: 1 }, // Level 5
+    { 1: 0, 2: 0, 3: 0, 4: 1 }, // Level 4
+    { 1: 8, 2: 2, 3: 1, 4: 0 }, // Level 5
     { 1: 6, 2: 5, 3: 1, 4: 0 }, // Level 6
     { 1: 7, 2: 6, 3: 1, 4: 0 }, // Level 7
     { 1: 8, 2: 7, 3: 1, 4: 0 }, // Level 8
@@ -249,8 +249,11 @@ class Tetris {
             }
             this.gameOverElement.textContent = '';
         }
+
         if (this.gameActive) return;
 
+        this.score = 0;
+        this.updateScore();
         this.startMsgElement.style.display = 'none';
         this.gameOverElement.style.display = 'none'; // Hide both during active gameplay to save space
         this.gameOverElement.textContent = '';
@@ -433,7 +436,11 @@ class Tetris {
     }
 
     checkWin() {
-        if (Object.values(this.quota).every(q => q === 0)) {
+        const quotasDone = Object.values(this.quota).every(q => q === 0);
+        // Kontrola, zda na hrací desce zbývají nějaké cihly (hodnota 9)
+        const bricksCleared = this.board.every(row => row.every(cell => cell !== 9));
+
+        if (quotasDone && bricksCleared) {
             Tetris.announceWin(this.playerNumber);
         }
     }
@@ -447,9 +454,8 @@ class Tetris {
         if (window.game1) window.game1.stop();
         if (window.game2) window.game2.stop();
 
-        // Immediately wipe both canvases and display win message
+        // Prepare next level
         Tetris.currentLevel++;
-        Tetris.updateLevelDisplay();
         Tetris.pieceSequence = []; // Reset sequence for next level
 
         let wipeDone = 0;
@@ -498,6 +504,7 @@ class Tetris {
 
     // Start without screen wipe – used after automatic level transition
     async startDirect() {
+        Tetris.updateLevelDisplay();
         this.gameOver = false;
         this.gameActive = true;
         this.startMsgElement.style.display = 'none';
@@ -505,7 +512,6 @@ class Tetris {
         this.gameOverElement.textContent = '';
 
         await this.loadLevelMap();
-        this.score = 0;
         this.quota = Tetris.getLevelQuota(Tetris.currentLevel);
         this.updateScore();
         this.updateQuotaDisplay();
