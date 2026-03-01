@@ -354,7 +354,7 @@ canvas {
     text-align: center;
     font-size: 0.8rem;
     color: rgba(160, 160, 160, 0.825);
-    letter-spacing: 1px;
+    letter-spacing: 0px;
     text-transform: uppercase;
     font-weight: 300;
     border-radius: 10px;
